@@ -41,9 +41,17 @@ while True:
     user_input = input("You: ")
     if user_input.lower() == "exit":
         break
+
     print("RODRICK:", rodrick.think(user_input))
     print("Memory recall:", rodrick.recall(user_input))
     print("Emotion:", rodrick.emotional_response(user_input))
+
+    # Training correction
+    feedback = input("Type 'correct' or 'wrong' to train, or press enter to skip: ")
+    if feedback.lower() in ["correct", "wrong"]:
+        print(rodrick.user_feedback(user_input, feedback))
+
+    # Neural Network Prediction
     tnn_input = np.array([[rodrick.qt.measure(), rodrick.qt.measure(), rodrick.qt.measure()]])
     print("Neural Net Guess:", tnn.forward(tnn_input))
     print("-----")
