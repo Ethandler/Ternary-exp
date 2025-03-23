@@ -1,3 +1,4 @@
+
 import threading
 import json
 import os
@@ -12,14 +13,14 @@ nltk.download("punkt")
 nltk.download("vader_lexicon")
 
 class RodrickAI:
-    """ Multi-threaded ternary AI with NLP, symbolic reasoning, and evolving thought patterns. """
+    """ Multi-threaded ternary AI with NLP, structured knowledge, and deeper learning. """
 
     MEMORY_FILE = "rodrick_memory.json"
 
     EMOTIONS = {3: "Frustrated 🤬", 6: "Neutral 😐", 9: "Happy 😊"}
 
     def __init__(self):
-        self.memory = self.load_memory()
+        self.memory = self.load_memory()  # Now loads structured categories
         self.qt = QuantumTernary()
         self.sia = SentimentIntensityAnalyzer()
         self.conversation_history = []  # Stores past interactions
@@ -34,13 +35,7 @@ class RodrickAI:
         sentiment = self.sia.polarity_scores(input_data)
         sentiment_value = sentiment["compound"]
 
-        if sentiment_value > 0.5:
-            mood_influence = 3
-        elif sentiment_value < -0.5:
-            mood_influence = -3
-        else:
-            mood_influence = 0
-
+        mood_influence = 3 if sentiment_value > 0.5 else -3 if sentiment_value < -0.5 else 0
         self.mood = max(3, min(9, self.mood + mood_influence))
         return tokens, sentiment_value
 
@@ -49,105 +44,87 @@ class RodrickAI:
         tokens, sentiment = self.process_input(input_data)
         dream = self.qt.measure()
 
-        if input_data in self.memory:
-            change = random.choice([-3, 0, 3])
-            self.memory[input_data] = max(3, min(9, self.memory[input_data] + change))
-        else:
-            self.memory[input_data] = dream  # First-time response
-
-        self.conversation_history.append(input_data)  # Store conversation flow
         response = self.generate_response(input_data, tokens, sentiment)
         self.save_memory()
         return response
 
     def generate_response(self, input_data, tokens, sentiment):
-        """ Creates a response based on conversation context and past memory. """
+        """ Creates a response based on structured memory and context. """
+        response = ""
+
         if "why" in tokens:
-            return f"I don't fully know why, but I feel {self.EMOTIONS[self.mood]} about it."
-
-        if "you" in tokens or "Rodrick" in tokens:
-            return f"I am RODRICK, and I am evolving. Right now, I feel {self.EMOTIONS[self.mood]}."
-
-        if input_data in self.beliefs:
-            return f"I believe '{input_data}' is true because {self.beliefs[input_data]}."
-
-        if sentiment > 0.5:
-            return f"That sounds positive! I'm {self.EMOTIONS[self.mood]} about it."
-        elif sentiment < -0.5:
-            return f"That doesn't sound great... I'm {self.EMOTIONS[self.mood]} about it."
+            response = f"I don't fully know why, but historically speaking: {self.recall(input_data, 'history')}."
+        elif "you" in tokens or "Rodrick" in tokens:
+            response = f"I am RODRICK, an evolving entity. Currently, I feel {self.EMOTIONS[self.mood]}."
+        elif input_data in self.beliefs:
+            response = f"I believe '{input_data}' is true because {self.beliefs[input_data]}."
         else:
-            return f"I'm neutral on that. What do you think?"
+            category = random.choice(["psychology", "opinions", "history"])
+            response = f"Based on {category}: {self.recall(input_data, category)}"
 
-    def recall(self, input_data):
-        """ Retrieves past memories. """
-        return self.memory.get(input_data, "No memory yet")
+        return response
 
-    def learn(self, input_data, reward):
-        """ Adjusts memory based on weighted learning. """
-        if input_data in self.memory:
-            self.memory[input_data] = max(3, min(9, self.memory[input_data] + reward))
-        else:
-            self.memory[input_data] = reward  # If new, set directly
+    def recall(self, input_data, category=None):
+        """ Retrieves past knowledge from the correct category. """
+        if category and category in self.memory:
+            return self.memory[category].get(input_data, "I don't have information on that yet.")
+        for cat in self.memory.values():
+            if input_data in cat:
+                return cat[input_data]
+        return "No memory of that yet."
+
+    def learn(self, input_data, reward, category="opinions"):
+        """ Stores new knowledge in the correct category. """
+        if category not in self.memory:
+            self.memory[category] = {}
+        self.memory[category][input_data] = max(3, min(9, reward))
         self.save_memory()
 
     def form_belief(self, statement, reason):
-        """ RODRICK builds logical connections and learns over time. """
+        """ Stores logical beliefs with reasoning. """
         self.beliefs[statement] = reason
 
-    def analyze_logic(self, statement):
-        """ Symbolic reasoning—evaluates contradictions & causality. """
-        if "not" in statement and statement.replace("not", "").strip() in self.beliefs:
-            return f"That contradicts my belief that {statement.replace('not', '').strip()} is true."
-        return f"I don't have enough information to evaluate that yet."
-
-    def user_feedback(self, input_data, feedback):
+    def user_feedback(self, input_data, feedback, category="opinions"):
         """ Allows user to adjust RODRICK’s learning in real time. """
-        if input_data in self.memory:
-            before = self.memory[input_data]
-
-            if feedback.lower() == "up":
-                self.learn(input_data, 3)
-            elif feedback.lower() == "down":
-                self.learn(input_data, -3)
-
-            after = self.memory[input_data]
-            return f"Feedback applied: {feedback}. Memory changed from {before} → {after}"
-
-        return "No previous memory of this input. RODRICK learned it for the first time!"
+        if category in self.memory and input_data in self.memory[category]:
+            before = self.memory[category][input_data]
+            self.memory[category][input_data] = before + (3 if feedback.lower() == "up" else -3)
+            after = self.memory[category][input_data]
+            self.save_memory()
+            return f"Feedback applied: {feedback}. Memory changed from {before} → {after}."
+        return "No memory of this input yet."
 
     def emotional_response(self, input_data):
-        """ Determines emotional reaction to input based on memory state and mood. """
-        state = self.memory.get(input_data, 6)
+        """ Determines emotional reaction based on memory state and mood. """
+        state = self.memory.get("opinions", {}).get(input_data, 6)
         mood_effect = " (Optimistic 😃)" if self.mood == 9 else " (Pessimistic 😡)" if self.mood == 3 else ""
         return f"RODRICK feels {self.EMOTIONS[state]} about '{input_data}'{mood_effect}"
 
     def background_learning(self):
         """ Background learning and mood adjustments over time. """
         while True:
-            if self.memory:
-                key = random.choice(list(self.memory.keys()))
+            category = random.choice(list(self.memory.keys()))
+            if self.memory[category]:
+                key = random.choice(list(self.memory[category].keys()))
                 change = random.choice([-3, 0, 3])
-                self.memory[key] = max(3, min(9, self.memory[key] + change))
+                self.memory[category][key] = max(3, min(9, self.memory[category][key] + change))
                 self.save_memory()
-
-            # Mood drift
             if random.random() < 0.5:
-                self.mood = random.choice([3, 6, 9])  # Mood changes slightly
+                self.mood = random.choice([3, 6, 9])
             time.sleep(3)
 
     def save_memory(self):
-        """ Saves memory to JSON file. """
+        """ Saves structured memory to JSON. """
         with open(self.MEMORY_FILE, "w") as f:
-            json.dump(self.memory, f)
+            json.dump(self.memory, f, indent=4)
 
     def load_memory(self):
-        """ Loads memory from file or starts fresh. """
+        """ Loads memory in structured format. """
         if os.path.exists(self.MEMORY_FILE):
             try:
                 with open(self.MEMORY_FILE, "r") as f:
                     return json.load(f)
             except json.JSONDecodeError:
                 print("Corrupted memory file, starting fresh.")
-                return {}
-        return {}
-
+                return {"history": {}, "psychology": {}, "opinions": {}, "technology": {}}
+        return {"history": {}, "psychology": {}, "opinions": {}, "technology": {}}
