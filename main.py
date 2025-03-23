@@ -12,7 +12,7 @@ while True:
     response = rodrick.think(user_input)
     print("RODRICK:", response)
     print("Memory recall:", rodrick.recall(user_input))
-    print("Mood:", rodrick.mood)  # NEW MOOD DISPLAY
+    print("Mood:", rodrick.mood)
     print("Emotion:", rodrick.emotional_response(user_input))
 
     # Logical analysis
@@ -26,4 +26,4 @@ while True:
 
     print("-----")
 
-print("RODRICK shutting down...")
+print("oh fuck....RODRICK shutting down...")
