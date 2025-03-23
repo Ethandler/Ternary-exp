@@ -2,47 +2,52 @@ from ternary_cpu import TernaryCPU
 from rodrick_ai import RodrickAI
 from ternary_nn import TernaryNeuralNetwork
 import numpy as np
+import time
+import random
 
-print("Initializing RODRICK's Ternary CPU...")
+# Initialize CPU
 cpu = TernaryCPU()
-print("CPU initialized.")
-
-print("Initializing RODRICK's AI system...")
-rodrick = RodrickAI()
-print("AI initialized.")
-
-# Load and execute a program
-program = [
-    ("SET", 0, 9),   # Set Register 0 to 9 (1)
-    ("SET", 1, 3),   # Set Register 1 to 3 (-1)
-    ("IF-GOTO", 0, 4),  # If Register 0 is 9, jump to instruction 4
-    ("SET", 2, 3),   # This line will be **skipped** if the condition is true
-    ("SET", 2, 9),   # If it jumps, Register 2 gets set to 9
+instructions = [
+    ("SET", 0, 9),
+    ("SET", 1, 3),
+    ("ADD", 0, 3),
+    ("JUMP", 0, 2),
 ]
+cpu.load_program(instructions)
+cpu.start()
 
-print("Loading program into CPU...")
-cpu.load_program(program)
-print("Executing program...")
-cpu.execute()
-print("Program execution complete.")
-
-# AI Thinking and Learning
-print("RODRICK is thinking...")
-print(rodrick.think("What is reality?"))
-print(rodrick.think("Who am I?"))
-
-# AI recalls previous thoughts and adjusts behavior
-print("AI Dream Recall:", rodrick.recall("What is reality?"))
-rodrick.learn("What is reality?", 3)  # AI learns a new perspective
-print("AI Dream Recall After Learning:", rodrick.recall("What is reality?"))
-
-# Check Emotional Response
-print("RODRICK's Mood:", rodrick.emotional_response("What is reality?"))
-
-# Ternary Neural Network Test
+# Initialize AI & Neural Network
+rodrick = RodrickAI()
 tnn = TernaryNeuralNetwork(3, 2)
-inputs = np.array([[9, 3, 6]])  # Example input
-print("Neural Prediction:", tnn.forward(inputs))
 
-# Show CPU state
+# Training Loop: Feeds RODRICK inputs & rewards
+training_inputs = ["Should I attack?", "What is love?", "Hello world?", "Pizza?"]
+for _ in range(5):
+    inp = random.choice(training_inputs)
+    print(rodrick.think(inp))
+    reward = random.choice([-3, 0, 3])
+    rodrick.learn(inp, reward)
+
+    # Train Neural Network
+    data = np.array([[rodrick.qt.measure(), rodrick.qt.measure(), rodrick.qt.measure()]])
+    expected = np.array([[9, 3]])
+    tnn.train(data, expected)
+
+    time.sleep(1)
+
+# CLI Loop (User Input)
+print("\n--- Interactive CLI with RODRICK (type 'exit' to quit) ---")
+while True:
+    user_input = input("You: ")
+    if user_input.lower() == "exit":
+        break
+    print("RODRICK:", rodrick.think(user_input))
+    print("Memory recall:", rodrick.recall(user_input))
+    print("Emotion:", rodrick.emotional_response(user_input))
+    tnn_input = np.array([[rodrick.qt.measure(), rodrick.qt.measure(), rodrick.qt.measure()]])
+    print("Neural Net Guess:", tnn.forward(tnn_input))
+    print("-----")
+
+cpu.stop()
 print("Final CPU State:", cpu)
+print("Done. RODRICK shutting down...")
